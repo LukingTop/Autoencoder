@@ -104,7 +104,7 @@ Após executar no Colab, copie os resultados reais para a apresentação e, se d
 
 Não é necessário baixar o conjunto de dados manualmente.
 
-## Estrutura do repositório
+A apresentação PowerPoint editável é fornecida como arquivo de entrega separado; o roteiro completo dos 15 slides também está no repositório em Markdown.\n\n## Estrutura do repositório
 
 ```text
 .
@@ -112,7 +112,7 @@ Não é necessário baixar o conjunto de dados manualmente.
 ├── README.md
 ├── requirements.txt
 ├── .gitignore
-└── Apresentacao_Autoencoder_Deteccao_de_Spam.pptx
+└── Apresentacao_Autoencoder_Deteccao_de_Spam.md
 ```
 
 ## Limitações e questões éticas
