@@ -82,17 +82,22 @@ A função sigmoid está na camada de reconstrução, não como uma saída de pr
 9. Análise de falsos positivos e falsos negativos.
 10. Demonstração com uma nova mensagem.
 
-## Resultados
+## Resultados da execução no Google Colab
 
-Os resultados **não são fixados neste README**, pois dependem da execução do notebook e do ambiente de treinamento. O notebook calcula as métricas reais e apresenta:
+Na execução registrada pela equipe, o conjunto de teste apresentou os seguintes resultados:
 
-- curvas de perda de treino e validação;
-- métricas dos dois modelos;
-- matrizes de confusão;
-- exemplos de falsos positivos e falsos negativos;
-- teste interativo com uma mensagem nova.
+| Métrica | Regressão logística | Autoencoder |
+|---|---:|---:|
+| Acurácia | 98,19% | 85,79% |
+| Precisão (spam) | 91,00% | 0,00% |
+| Recall (spam) | 94,79% | 0,00% |
+| F1-score (spam) | 92,86% | 0,00% |
+| ROC-AUC | 99,70% | 33,96% |
+| Average Precision | 98,34% | 8,83% |
 
-Após executar no Colab, copie os resultados reais para a apresentação e, se desejar, atualize esta seção. Não afirme que o autoencoder superou a baseline sem conferir o F1-score e o recall obtidos.
+O autoencoder previu todas as 774 mensagens de teste como normais. A matriz de confusão foi: 664 verdadeiros negativos, 14 falsos positivos, 96 falsos negativos e nenhum verdadeiro positivo. Portanto, nesta configuração, o autoencoder não detectou mensagens spam e ficou abaixo da baseline.
+
+O treinamento executou 6 épocas em aproximadamente 9,42 segundos. O Early Stopping restaurou os pesos da melhor época. Esses resultados devem ser interpretados como uma limitação observada nesta experiência, e não como prova de que autoencoders não podem ser usados para detecção de spam.
 
 ## Como executar no Google Colab
 
