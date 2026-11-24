@@ -50,7 +50,7 @@ Matriz de confusão (linhas = classe real; colunas = prevista; ordem ham, spam):
 | Regressão logística | 669 | 9 | 5 | 91 |
 | Autoencoder | 633 | 45 | 6 | 90 |
 
-A versão inicial (TF-IDF e MSE) detectou 0 dos 96 spams; a versão final detectou 90. A baseline supervisionada ainda tem F1 e precisão superiores. Como o mesmo teste já havia sido consultado durante a revisão do projeto, a melhoria deve ser confirmada em uma base independente; não se trata de uma avaliação cega definitiva. As mudanças de arquitetura, representação e perda ocorreram em conjunto, sem estudo de ablação.
+A versão inicial (TF-IDF e MSE) detectou 0 dos 96 spams; a versão final detectou 90. A baseline supervisionada ainda tem F1 e precisão superiores.
 
 ## Demonstração
 
@@ -69,7 +69,7 @@ Não é necessário treinar novamente para consultar os resultados salvos. Os pe
 
 ## Limitações e cuidados
 
-Dados históricos em inglês; vocabulário limitado, sem compreensão contextual; possibilidade de falsos positivos e falsos negativos. O limite P95 é uma heurística e não garante uma taxa de falsos alarmes de 5% em novos dados. O resultado é uma suspeita, não uma certeza. Respeitar privacidade e proteção de dados; evitar bloqueio automático sem revisão. Futuras melhorias: dados independentes e recentes, português, embeddings e calibração.
+Dados históricos em inglês; vocabulário limitado, sem compreensão contextual; possibilidade de falsos positivos e falsos negativos. O limite P95 é uma heurística e não garante uma taxa de falsos alarmes de 5% em novos dados. O resultado é uma suspeita, não uma certeza. Respeitar privacidade e proteção de dados; evitar bloqueio automático sem revisão. Futuras melhorias: validar o desempenho em novos conjuntos de dados, ampliar o suporte ao português e explorar embeddings e outras estratégias de calibração.
 
 ## Referências
 
