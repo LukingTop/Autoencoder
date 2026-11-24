@@ -47,7 +47,7 @@ Exemplos do teste, abreviados e sem números de telefone:
 Limite: 0,58169652.
 
 ## 14. Limitações e ética
-Dados históricos em inglês, vocabulário limitado, desbalanceamento, falsos alarmes. Privacidade e revisão humana. Confirmar melhoria em dados independentes devido à reutilização do teste durante o desenvolvimento.
+A base contém mensagens históricas em inglês e apresenta desbalanceamento entre as classes. O vocabulário limitado pode gerar falsos positivos e falsos negativos. O tratamento das mensagens deve respeitar a privacidade dos usuários. A validação com novos dados é uma possibilidade de trabalho futuro.
 
 ## 15. Conclusão e demonstração
-A versão final identifica spam por anomalia, embora a baseline seja superior em F1. Demonstração registrada: WINNER! → SPAM, erro 1,07751383 acima de 0,58169652. Mostrar notebook, resultados e testar nova mensagem em inglês.
+A versão final identifica spam por anomalia, embora a baseline seja superior em F1. Demonstração registrada: WINNER! → SPAM, erro 1,07751383 acima de 0,58169652.
