@@ -1,94 +1,53 @@
 # Apresentação — Autoencoder para detecção de spam em SMS
 
-## Slide 1 — Capa
-- Projeto: Autoencoder para detecção de spam em SMS
-- Disciplina: Redes Neurais
-- Integrantes: Raniel Santos, Pedro Miguel, João Guilherme e Antônio Gabriel
-- Turma: 6º período — Manhã (2026.2)
-- Data: 02/12/2026
+## 1. Capa
+Redes Neurais — Autoencoder para detecção de spam em SMS.
+Integrantes: Raniel Santos, Pedro Miguel, João Guilherme e Antônio Gabriel.
+6º período, manhã (2026.2), 02/12/2026.
 
-## Slide 2 — Problema
-- SMS podem conter publicidade abusiva, golpes e links suspeitos.
-- Entrada: uma mensagem de texto SMS.
-- Saída: NORMAL (ham) ou SPAM (suspeita).
-- Indicador: erro de reconstrução comparado a um limite.
+## 2. Problema
+SMS indesejados: publicidade abusiva, golpes e links suspeitos. Entrada: mensagem SMS. Saída: normal (ham) ou suspeita de spam, conforme erro de reconstrução.
 
-## Slide 3 — Objetivo
-- Aprender o padrão de mensagens legítimas e sinalizar textos com reconstrução incomum.
-- Tarefa: detecção de anomalias, avaliada como classificação binária.
-- Treinamento one-class/semi-supervisionado: usa mensagens ham no treino e rótulos para avaliar o teste.
+## 3. Objetivo
+Aprender padrões legítimos e sinalizar anomalias. Treinamento one-class com ham e avaliação binária.
 
-## Slide 4 — Conjunto de dados
-- SMS Spam Collection, UCI Machine Learning Repository.
-- 5.574 mensagens em inglês: 4.827 ham e 747 spam na distribuição divulgada pela base.
-- Formato: rótulo e texto separados por tabulação.
-- Fonte: https://archive.ics.uci.edu/dataset/228/sms
+## 4. Dados
+SMS Spam Collection (UCI), 5.574 SMS em inglês. Após a limpeza: 5.160, sendo 4.518 ham e 642 spam.
 
-## Slide 5 — Preparação dos dados
-- Remoção de textos vazios, duplicatas e mensagens com rótulos conflitantes.
-- Divisão estratificada: 70% treino, 15% validação e 15% teste.
-- TF-IDF ajustado somente no treino; validação e teste apenas transformados.
-- Teste isolado até a avaliação final.
+## 5. Preparação
+Remoção de 414 duplicatas; divisão estratificada 3.612/774/774 (70/15/15). Vocabulários ajustados apenas no treino.
 
-## Slide 6 — Baseline
-- Regressão logística supervisionada com TF-IDF e pesos balanceados.
-- Acurácia: 98,19%; precisão spam: 91,00%; recall spam: 94,79%; F1 spam: 92,86%.
-- ROC-AUC: 99,70%; Average Precision: 98,34%.
+## 6. Baseline
+Regressão logística com TF-IDF e pesos balanceados. Acurácia 98,19%; precisão 91%; recall 94,79%; F1 92,86%; ROC-AUC 99,70%; AP 98,34%.
 
-## Slide 7 — Representação dos dados
-- TF-IDF transforma cada SMS em vetor numérico.
-- Cada posição representa um termo ou bigrama e seu peso relativo.
-- Até 1.500 características, normalização L2.
-- TF-IDF não é embedding contextual.
+## 7. Representação
+TF-IDF com 1.500 atributos e normalização L2 para a baseline; Bag-of-Words binário com 3.000 atributos para o autoencoder. Unigramas e bigramas. Não são embeddings contextuais.
 
-## Slide 8 — Arquitetura
-- Entrada: vetor TF-IDF.
-- Encoder: Dense(128, ReLU) → Dense(64, ReLU) → Dense(32, ReLU).
-- Gargalo latente de 32 dimensões.
-- Decoder: Dense(64, ReLU) → Dense(128, ReLU) → Dense(n_features, sigmoid).
-- Treinamento somente com mensagens ham.
+## 8. Arquitetura
+3000 → 256 → 128 → 64 → 128 → 256 → 3000; 1.621.752 parâmetros treináveis. Treino com ham.
 
-## Slide 9 — Funções e configurações
-- ReLU nas camadas ocultas; sigmoid na saída de reconstrução.
-- MSE como perda de reconstrução.
-- Adam como otimizador.
-- Não foi usada Binary Cross-Entropy, pois o modelo reconstrói vetores, não prevê diretamente o rótulo.
+## 9. Funções
+ReLU, sigmoid, BCE ponderada (peso 1 para termos presentes e 0,005 para ausentes), Adam. A saída sigmoid reconstrói a presença de termos, não a probabilidade de spam.
 
-## Slide 10 — Treinamento
-- Até 40 épocas; lote 32; Adam com taxa 0,001; Early Stopping com paciência 5.
-- Resultado observado: 6 épocas, 9,42 segundos.
-- Perda de treino caiu de 0,0665 para cerca de 0,0006637 na 2ª época; validação ficou próxima de 0,0006617.
-- Pesos restaurados da melhor época (1).
+## 10. Treinamento
+Até 60 épocas, lote 32, taxa 0,0005, Early Stopping com paciência 7. Execução: 17 épocas em 126,45 s na CPU. Melhor época 10, perda de validação 0,3627. Curva original salva no notebook.
 
-## Slide 11 — Resultados do autoencoder
-- Acurácia: 85,79%.
-- Precisão spam: 0%; recall spam: 0%; F1 spam: 0%.
-- ROC-AUC: 33,96%; Average Precision: 8,83%.
-- Matriz: 664 verdadeiros negativos, 14 falsos positivos, 96 falsos negativos e 0 verdadeiros positivos.
-- O autoencoder classificou todas as mensagens como normais.
+## 11. Resultados
+Acurácia 93,41%; precisão 66,67%; recall 93,75%; F1 77,92%; ROC-AUC 98,31%; AP 94,46%. Matriz: VN=633, FP=45, FN=6, VP=90. 90 de 96 spams identificados.
 
-## Slide 12 — Comparação com a baseline
-| Modelo | Precisão (spam) | Recall (spam) | F1-score (spam) |
-|---|---:|---:|---:|
-| Regressão logística | 91,00% | 94,79% | 92,86% |
-| Autoencoder | 0,00% | 0,00% | 0,00% |
+## 12. Comparação
+Baseline: F1 92,86%; autoencoder: F1 77,92%. A primeira versão detectou 0 spams. Limite P95 de ham: 0,58169652. Medianas de validação: ham 0,37128737; spam 1,43385740. Baseline ainda tem maior precisão e F1.
 
-Nesta execução, a regressão logística foi superior em todas as métricas comparadas.
+## 13. Acertos e erros
+Exemplos do teste, abreviados e sem números de telefone:
+- Ham correto: “Sez, hows u & de arab boy? Hope u r all good…” — erro 0,41295141.
+- Spam correto: “WINNER!! As a valued network customer…” — erro 2,13195375.
+- Falso positivo: “I've got it down to a tea. not sure which flavour” — erro 0,67480151.
+- Falso negativo: “You have 1 new message. Please call…” — erro aproximado 0,471907.
+Limite: 0,58169652.
 
-## Slide 13 — Acertos e erros
-- Acerto: usar uma mensagem ham que o notebook apresente como ham; 664 mensagens normais foram classificadas corretamente.
-- Erro: usar uma mensagem spam que o notebook apresente como ham; houve 96 falsos negativos.
-- Possível causa: o erro de reconstrução não diferenciou os exemplos spam dos padrões ham aprendidos.
-- Executar a célula extra do notebook para imprimir o texto completo das mensagens de exemplo.
+## 14. Limitações e ética
+Dados históricos em inglês, vocabulário limitado, desbalanceamento, falsos alarmes. Privacidade e revisão humana. Confirmar melhoria em dados independentes devido à reutilização do teste durante o desenvolvimento.
 
-## Slide 14 — Limitações e questões éticas
-- Base histórica, em inglês e desbalanceada.
-- TF-IDF não captura plenamente contexto e intenção.
-- Falsos positivos e falsos negativos têm consequências diferentes.
-- Proteger dados pessoais e evitar bloqueios automáticos sem revisão.
-
-## Slide 15 — Conclusão e demonstração
-- O pipeline foi executado, mas o autoencoder não identificou spam nesta configuração.
-- A baseline alcançou F1 de 92,86%; o autoencoder, 0%.
-- Demonstrar o Colab, as métricas e a previsão de uma nova mensagem.
-- Principal aprendizado: a representação e o limite de reconstrução precisam ser avaliados; uma rede mais complexa não garante melhor desempenho.
+## 15. Conclusão e demonstração
+A versão final identifica spam por anomalia, embora a baseline seja superior em F1. Demonstração registrada: WINNER! → SPAM, erro 1,07751383 acima de 0,58169652. Mostrar notebook, resultados e testar nova mensagem em inglês.
