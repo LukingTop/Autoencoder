@@ -47,7 +47,7 @@ A separação estratificada preserva aproximadamente as proporções de classe. 
 
 ## Representação dos textos
 
-É utilizado **TF-IDF** com vocabulário de até 1.500 características e unigramas/bigramas. Cada mensagem é convertida em um vetor numérico que pondera a importância dos termos. TF-IDF não é um embedding semântico: não representa, por si só, o significado contextual das frases.
+O projeto usa duas representações. A baseline usa **TF-IDF** (até 1.500 características, unigramas e bigramas). O autoencoder usa **bag-of-words binário** (até 3.000 características): cada posição indica se um termo aparece na mensagem. Os dois vocabulários são ajustados somente com o treino.
 
 ## Modelos e ferramentas
 
@@ -55,19 +55,19 @@ A separação estratificada preserva aproximadamente as proporções de classe. 
 
 Regressão logística com vetores TF-IDF, `class_weight="balanced"` e `max_iter=1000`. A baseline é supervisionada e aprende com os rótulos `ham` e `spam`.
 
-### Autoencoder
+### Autoencoder — versão melhorada
 
-- Entrada: vetor TF-IDF.
-- Encoder: Dense(128, ReLU) → Dense(64, ReLU) → Dense(32, ReLU), formando o gargalo latente.
-- Decoder: Dense(64, ReLU) → Dense(128, ReLU) → Dense(n_features, sigmoid).
+- Entrada: presença/ausência de termos em bag-of-words binário.
+- Encoder: Dense(256, ReLU) → Dense(128, ReLU) → Dense(64, ReLU).
+- Decoder: Dense(128, ReLU) → Dense(256, ReLU) → Dense(n_features, sigmoid).
 - Treinamento: somente mensagens `ham` do subconjunto de treino.
-- Perda: erro quadrático médio (MSE), pois o objetivo é reconstruir o vetor.
-- Otimizador: Adam, taxa de aprendizado 0,001.
-- Épocas: até 40, com lote de 32 e Early Stopping.
+- Perda: Binary Cross-Entropy ponderada; peso 1 para termos presentes e 0,005 para termos ausentes.
+- Otimizador: Adam, taxa de aprendizado 0,0005.
+- Épocas: até 60, lote de 32 e Early Stopping com paciência 7.
 - Limite: percentil 95 do erro de reconstrução das mensagens `ham` da validação.
 - Regra: erro acima do limite = suspeita de spam.
 
-A função sigmoid está na camada de reconstrução, não como uma saída de probabilidade de spam. A classificação é feita comparando o erro com o limite calibrado.
+A ponderação procura evitar que as muitas posições zero dominem a perda. Esta mudança tem justificativa técnica, mas não garante melhora: os resultados precisam ser verificados com a nova execução no Colab.
 
 ## Etapas do projeto
 
@@ -82,22 +82,11 @@ A função sigmoid está na camada de reconstrução, não como uma saída de pr
 9. Análise de falsos positivos e falsos negativos.
 10. Demonstração com uma nova mensagem.
 
-## Resultados da execução no Google Colab
+## Resultados e reavaliação
 
-Na execução registrada pela equipe, o conjunto de teste apresentou os seguintes resultados:
+A primeira execução, da versão antiga com MSE simples sobre TF-IDF, resultou em F1-score de 0% para a classe spam. Essa versão foi substituída porque a perda era dominada pelas muitas posições zero do vetor TF-IDF.
 
-| Métrica | Regressão logística | Autoencoder |
-|---|---:|---:|
-| Acurácia | 98,19% | 85,79% |
-| Precisão (spam) | 91,00% | 0,00% |
-| Recall (spam) | 94,79% | 0,00% |
-| F1-score (spam) | 92,86% | 0,00% |
-| ROC-AUC | 99,70% | 33,96% |
-| Average Precision | 98,34% | 8,83% |
-
-O autoencoder previu todas as 774 mensagens de teste como normais. A matriz de confusão foi: 664 verdadeiros negativos, 14 falsos positivos, 96 falsos negativos e nenhum verdadeiro positivo. Portanto, nesta configuração, o autoencoder não detectou mensagens spam e ficou abaixo da baseline.
-
-O treinamento executou 6 épocas em aproximadamente 9,42 segundos. O Early Stopping restaurou os pesos da melhor época. Esses resultados devem ser interpretados como uma limitação observada nesta experiência, e não como prova de que autoencoders não podem ser usados para detecção de spam.
+**Os resultados da nova versão com bag-of-words binário e BCE ponderada ainda precisam ser obtidos executando o notebook atualizado no Colab.** Não reutilize as métricas antigas como se fossem da versão melhorada. Compare a baseline e o autoencoder novamente no mesmo conjunto de teste.
 
 ## Como executar no Google Colab
 
