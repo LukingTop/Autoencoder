@@ -1,131 +1,81 @@
 # Autoencoder para detecção de spam em SMS
 
-Projeto acadêmico de Redes Neurais. O protótipo recebe uma mensagem de texto e indica se ela parece **normal (ham)** ou **spam**. A solução usa um autoencoder como detector de anomalias: a rede aprende a reconstruir mensagens legítimas e sinaliza mensagens com erro de reconstrução elevado.
+Trabalho final — Redes Neurais | 6º período, manhã (2026.2) | 02/12/2026
 
-> **Escopo:** o conjunto de dados é composto por mensagens em inglês. O sistema não foi validado para português e não deve ser tratado como filtro comercial pronto para uso.
+**Integrantes:** Raniel Santos, Pedro Miguel, João Guilherme e Antônio Gabriel.
 
-## Integrantes
+## Objetivo
 
-- Integrante 1: `[preencher]`
-- Integrante 2: `[preencher]`
-- Integrante 3: `[preencher]`
-- Turma: `[preencher]`
-- Disciplina: Redes Neurais
+Detectar mensagens SMS suspeitas em inglês por meio de um autoencoder treinado apenas com mensagens legítimas (`ham`). A decisão é baseada no erro de reconstrução e não em uma probabilidade de spam. A regressão logística supervisionada é a baseline.
 
-## Problema e aplicação
+## Dados e preparação
 
-Mensagens SMS indesejadas podem conter publicidade, tentativas de fraude ou links suspeitos. O projeto investiga se padrões de mensagens legítimas podem ser aprendidos por uma rede neural e usados para identificar mensagens que se afastam desse padrão.
+Fonte: [SMS Spam Collection (UCI)](https://archive.ics.uci.edu/dataset/228/sms). A execução carregou 5.574 mensagens; removeu 414 duplicatas exatas e nenhum texto ambíguo. Restaram 5.160 mensagens: 4.518 ham e 642 spam.
 
-**Entrada:** texto de uma mensagem SMS.
+| Subconjunto | Quantidade |
+|---|---:|
+| Treino (70%) | 3.612 |
+| Validação (15%) | 774 |
+| Teste (15%) | 774 |
 
-**Saída:** `NORMAL (ham)` ou `SPAM (suspeita)`, acompanhada do erro de reconstrução e do limite aplicado.
+Divisão estratificada com semente 42. Vocabulários ajustados apenas no treino. Baseline: TF-IDF, 1.500 características, unigramas e bigramas, frequência sublinear, normalização L2 e `class_weight="balanced"`. Autoencoder: Bag-of-Words binário, 3.000 características, unigramas e bigramas. Não são embeddings contextuais.
 
-**Tipo de tarefa:** detecção de anomalias com treinamento **one-class/semi-supervisionado** (o rótulo é usado para separar exemplos legítimos no treino), avaliada como classificação binária usando os rótulos disponíveis no teste.
+## Arquitetura final
 
-## Conjunto de dados
+`3000 → 256 → 128 → 64 → 128 → 256 → 3000`
 
-- **Nome:** SMS Spam Collection.
-- **Origem:** UCI Machine Learning Repository.
-- **Link:** https://archive.ics.uci.edu/dataset/228/sms
-- **Tamanho divulgado:** 5.574 mensagens.
-- **Classes:** `ham` (mensagem legítima) e `spam`.
-- **Formato:** arquivo de texto separado por tabulação, com rótulo e mensagem.
-- **Idioma:** inglês.
-- **Distribuição divulgada:** 4.827 mensagens legítimas e 747 spam.
+- Encoder e decoder densos; ReLU nas camadas ocultas e sigmoid na saída.
+- 1.621.752 parâmetros treináveis.
+- Binary Cross-Entropy ponderada: peso 1 para termos presentes e 0,005 para ausentes, normalizada pela soma dos pesos de cada exemplo.
+- Adam, taxa 0,0005; lote 32; máximo de 60 épocas; Early Stopping com paciência 7 e restauração dos melhores pesos.
+- Treino e monitoramento de perda somente com ham. Limite de anomalia: percentil 95 dos erros de ham na validação.
 
-A base é desbalanceada. Por esse motivo, o projeto analisa precisão, recall e F1 da classe spam, além da acurácia.
+## Resultados registrados no Colab
 
-## Preparação dos dados
+TensorFlow 2.21.0, CPU. Foram executadas 17 épocas em 126,45 segundos; os pesos da época 10 foram restaurados (perda de validação 0,3627). Limite: 0,58169652. Medianas dos erros na validação: ham 0,37128737 e spam 1,43385740.
 
-1. Download do arquivo oficial da UCI.
-2. Remoção de textos vazios e registros duplicados; textos com rótulos conflitantes são descartados.
-3. Divisão estratificada em 70% treino, 15% validação e 15% teste.
-4. Ajuste do vocabulário TF-IDF exclusivamente com o treino; validação e teste apenas são transformados com esse vocabulário.
-5. Conversão das matrizes esparsas para matrizes densas para entrada no Keras.
+| Métrica | Regressão logística | Autoencoder final |
+|---|---:|---:|
+| Acurácia | 98,19% | 93,41% |
+| Precisão (spam) | 91,00% | 66,67% |
+| Recall (spam) | 94,79% | 93,75% |
+| F1-score (spam) | 92,86% | 77,92% |
+| ROC-AUC | 99,70% | 98,31% |
+| Average Precision | 98,34% | 94,46% |
 
-A separação estratificada preserva aproximadamente as proporções de classe. O conjunto de teste não participa do treinamento nem da calibração do limite.
+Matriz de confusão (linhas = classe real; colunas = prevista; ordem ham, spam):
 
-## Representação dos textos
+| Modelo | VN | FP | FN | VP |
+|---|---:|---:|---:|---:|
+| Regressão logística | 669 | 9 | 5 | 91 |
+| Autoencoder | 633 | 45 | 6 | 90 |
 
-O projeto usa duas representações. A baseline usa **TF-IDF** (até 1.500 características, unigramas e bigramas). O autoencoder usa **bag-of-words binário** (até 3.000 características): cada posição indica se um termo aparece na mensagem. Os dois vocabulários são ajustados somente com o treino.
+A versão inicial (TF-IDF e MSE) detectou 0 dos 96 spams; a versão final detectou 90. A baseline supervisionada ainda tem F1 e precisão superiores. Como o mesmo teste já havia sido consultado durante a revisão do projeto, a melhoria deve ser confirmada em uma base independente; não se trata de uma avaliação cega definitiva. As mudanças de arquitetura, representação e perda ocorreram em conjunto, sem estudo de ablação.
 
-## Modelos e ferramentas
+## Demonstração
 
-### Baseline
+- `Are we still meeting for lunch tomorrow?` → NORMAL, erro 0,31886733.
+- `Congratulations! You have won a free prize. Claim now!` → SPAM, erro 3,34355076.
+- `WINNER!` → SPAM, erro 1,07751383.
 
-Regressão logística com vetores TF-IDF, `class_weight="balanced"` e `max_iter=1000`. A baseline é supervisionada e aprende com os rótulos `ham` e `spam`.
+## Como executar
 
-### Autoencoder — versão melhorada
+1. Abra `Projeto_Autoencoder_Deteccao_de_Spam.ipynb` no Google Colab (Arquivo → Fazer upload de notebook, ou aba GitHub).
+2. Execute todas as células em ordem. A primeira instala as dependências; o download da base requer internet.
+3. Digite uma mensagem em inglês na demonstração interativa da seção 13.
+4. Confira o resumo da seção 14. As saídas da execução registrada estão preservadas; tempos e métricas podem variar em nova execução.
 
-- Entrada: presença/ausência de termos em bag-of-words binário.
-- Encoder: Dense(256, ReLU) → Dense(128, ReLU) → Dense(64, ReLU).
-- Decoder: Dense(128, ReLU) → Dense(256, ReLU) → Dense(n_features, sigmoid).
-- Treinamento: somente mensagens `ham` do subconjunto de treino.
-- Perda: Binary Cross-Entropy ponderada; peso 1 para termos presentes e 0,005 para termos ausentes.
-- Otimizador: Adam, taxa de aprendizado 0,0005.
-- Épocas: até 60, lote de 32 e Early Stopping com paciência 7.
-- Limite: percentil 95 do erro de reconstrução das mensagens `ham` da validação.
-- Regra: erro acima do limite = suspeita de spam.
+Não é necessário treinar novamente para consultar os resultados salvos. Os pesos do modelo não estão incluídos no notebook; execute o treinamento para uma nova demonstração.
 
-A ponderação procura evitar que as muitas posições zero dominem a perda. Esta mudança tem justificativa técnica, mas não garante melhora: os resultados precisam ser verificados com a nova execução no Colab.
+## Limitações e cuidados
 
-## Etapas do projeto
-
-1. Carregamento e inspeção da base.
-2. Limpeza e deduplicação.
-3. Divisão treino/validação/teste.
-4. Vetorização TF-IDF.
-5. Treinamento da baseline de regressão logística.
-6. Treinamento do autoencoder somente com mensagens legítimas.
-7. Calibração do limite de anomalia na validação.
-8. Avaliação no teste usando acurácia, precisão, recall, F1, ROC-AUC, average precision e matriz de confusão.
-9. Análise de falsos positivos e falsos negativos.
-10. Demonstração com uma nova mensagem.
-
-## Resultados e reavaliação
-
-A primeira execução, da versão antiga com MSE simples sobre TF-IDF, resultou em F1-score de 0% para a classe spam. Essa versão foi substituída porque a perda era dominada pelas muitas posições zero do vetor TF-IDF.
-
-**Os resultados da nova versão com bag-of-words binário e BCE ponderada ainda precisam ser obtidos executando o notebook atualizado no Colab.** Não reutilize as métricas antigas como se fossem da versão melhorada. Compare a baseline e o autoencoder novamente no mesmo conjunto de teste.
-
-## Como executar no Google Colab
-
-1. Faça upload de `Projeto_Autoencoder_Deteccao_de_Spam.ipynb` no Google Colab ou abra o arquivo pelo Google Drive.
-2. Selecione **Ambiente de execução → Executar tudo**.
-3. Autorize a instalação das bibliotecas, se solicitado.
-4. O notebook fará o download da base da UCI automaticamente; portanto, a sessão precisa de acesso à internet.
-5. Execute todas as células em ordem. Ao final, digite uma mensagem em inglês na demonstração interativa.
-
-Não é necessário baixar o conjunto de dados manualmente.
-
-A apresentação PowerPoint editável é fornecida como arquivo de entrega separado; o roteiro completo dos 15 slides também está no repositório em Markdown.\n\n## Estrutura do repositório
-
-```text
-.
-├── Projeto_Autoencoder_Deteccao_de_Spam.ipynb
-├── README.md
-├── requirements.txt
-├── .gitignore
-└── Apresentacao_Autoencoder_Deteccao_de_Spam.md
-```
-
-## Limitações e questões éticas
-
-- Os dados estão em inglês e podem não representar mensagens atuais ou mensagens em português.
-- A base é desbalanceada e relativamente pequena para representar todo o universo de SMS.
-- TF-IDF não captura plenamente contexto, intenção ou ordem das palavras.
-- Mensagens legítimas incomuns podem ser sinalizadas como spam; spams com vocabulário comum podem não ser detectados.
-- O limite de reconstrução é uma heurística calibrada na validação, não uma garantia.
-- Mensagens podem conter informações pessoais. Uma aplicação real deve minimizar coleta e retenção, proteger os dados e respeitar a legislação aplicável.
-- O protótipo deve apoiar, e não substituir sem revisão, a decisão do usuário.
-
-## Declaração de uso de IA
-
-A inteligência artificial generativa foi utilizada como apoio à organização do projeto, à explicação dos conceitos e à elaboração inicial do notebook e da documentação. Os integrantes devem revisar, executar, adaptar e compreender o código e os resultados apresentados.
+Dados históricos em inglês; vocabulário limitado, sem compreensão contextual; possibilidade de falsos positivos e falsos negativos. O limite P95 é uma heurística e não garante uma taxa de falsos alarmes de 5% em novos dados. O resultado é uma suspeita, não uma certeza. Respeitar privacidade e proteção de dados; evitar bloqueio automático sem revisão. Futuras melhorias: dados independentes e recentes, português, embeddings e calibração.
 
 ## Referências
 
-- UCI MACHINE LEARNING REPOSITORY. **SMS Spam Collection**. Disponível em: <https://archive.ics.uci.edu/dataset/228/sms>. Acesso em: 17 nov. 2026.
-- ALMEIDA, T. A.; GÓMEZ HIDALGO, J. M.; YAMAKAMI, A. **Contributions to the study of SMS Spam Filtering: New Collection and Results**. Proceedings of the 2011 ACM Symposium on Document Engineering, 2011.
-- PEDREGOSA, F. et al. Scikit-learn: Machine Learning in Python. *Journal of Machine Learning Research*, v. 12, p. 2825–2830, 2011.
-- ABADI, M. et al. TensorFlow: A System for Large-Scale Machine Learning. 2016.
+- UCI Machine Learning Repository. SMS Spam Collection. https://archive.ics.uci.edu/dataset/228/sms
+- Almeida, T. A.; Gómez Hidalgo, J. M.; Yamakami, A. Contributions to the study of SMS spam filtering: new collection and results. 2011.
+- Pedregosa et al. Scikit-learn: Machine Learning in Python. JMLR, 2011.
+- Abadi et al. TensorFlow: A System for Large-Scale Machine Learning. 2016.
+
+A declaração de uso de IA consta no notebook.
