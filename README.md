@@ -60,7 +60,7 @@ A versão inicial (TF-IDF e MSE) detectou 0 dos 96 spams; a versão final detect
 
 ## Como executar
 
-1. Abra `Projeto_Autoencoder_Deteccao_de_Spam.ipynb` no Google Colab (Arquivo → Fazer upload de notebook, ou aba GitHub).
+1. Abra o notebook `Autoencoder.ipynb` no Google Colab. No GitHub, o mesmo projeto está disponível no arquivo [`Projeto_Autoencoder_Deteccao_de_Spam.ipynb`](Projeto_Autoencoder_Deteccao_de_Spam.ipynb), que pode ser aberto pelo Colab (Arquivo → Abrir notebook → GitHub) ou baixado para upload.
 2. Execute todas as células em ordem. A primeira instala as dependências, incluindo ipywidgets para a interface; o download da base requer internet.
 3. Na seção 13, digite uma mensagem em inglês na interface e clique em **Analisar mensagem**. A classificação, o erro de reconstrução, o limite de anomalia e a interpretação serão exibidos na própria interface.
 4. Confira o resumo da seção 14. As saídas da execução registrada estão preservadas; tempos e métricas podem variar em nova execução.
